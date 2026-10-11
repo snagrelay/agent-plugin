@@ -1,0 +1,24 @@
+{
+    "name": "snagrelay",
+    "displayName": "SnagRelay",
+    "description": "Bug reports your coding agent can fix. Give it a ticket key and it reads the broken element, console errors with file and line, failing requests with their bodies and the repro steps, then fixes the bug and closes the loop.",
+    "version": "1.0.0",
+    "author": {
+        "name": "SnagRelay",
+        "email": "hello@snagrelay.com"
+    },
+    "homepage": "https://snagrelay.com/?ref=cursor",
+    "repository": "https://github.com/snagrelay/agent-plugin",
+    "license": "MIT",
+    "keywords": [
+        "bug",
+        "bugs",
+        "issues",
+        "MCP",
+        "debugging",
+        "bug-reporting",
+        "error-monitoring",
+        "QA"
+    ],
+    "logo": "assets/logo.svg"
+}

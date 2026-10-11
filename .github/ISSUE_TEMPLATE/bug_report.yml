@@ -1,0 +1,27 @@
+name: Plugin or install problem
+description: The plugin will not install, authenticate or load its skills
+labels: [bug]
+body:
+    - type: dropdown
+      id: client
+      attributes:
+          label: Client
+          options: [Cursor, Claude Code, Codex, Lovable, Bolt, Replit, Other]
+      validations:
+          required: true
+    - type: input
+      id: version
+      attributes:
+          label: Client version
+          placeholder: e.g. Claude Code 2.1.300
+    - type: textarea
+      id: what
+      attributes:
+          label: What happened
+          description: Include the exact error text. Run the `connect` skill (or the `whoami` tool) and paste its result. Do not paste tokens.
+      validations:
+          required: true
+    - type: textarea
+      id: expected
+      attributes:
+          label: What you expected

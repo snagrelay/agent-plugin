@@ -1,0 +1,35 @@
+{
+    "name": "snagrelay",
+    "owner": {
+        "name": "SnagRelay",
+        "email": "hello@snagrelay.com"
+    },
+    "metadata": {
+        "description": "SnagRelay for Claude Code: bug reports your coding agent can fix.",
+        "version": "1.0.0"
+    },
+    "plugins": [
+        {
+            "name": "snagrelay",
+            "source": "./",
+            "description": "Bug reports your coding agent can fix. Give it a ticket key and it reads the broken element, console errors with file and line, failing requests with their bodies and the repro steps, then fixes the bug and closes the loop.",
+            "version": "1.0.0",
+            "author": {
+                "name": "SnagRelay",
+                "email": "hello@snagrelay.com"
+            },
+            "homepage": "https://snagrelay.com/?ref=claude",
+            "repository": "https://github.com/snagrelay/agent-plugin",
+            "license": "MIT",
+            "category": "development",
+            "keywords": [
+                "bug",
+                "issues",
+                "mcp",
+                "debugging",
+                "bug-reporting",
+                "qa"
+            ]
+        }
+    ]
+}

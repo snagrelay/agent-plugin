@@ -1,0 +1,105 @@
+{
+    "name": "snagrelay",
+    "version": "1.0.0",
+    "description": "Bug reports your coding agent can fix. Give it a ticket key and it reads the broken element, console errors with file and line, failing requests with their bodies and the repro steps, then fixes the bug and closes the loop.",
+    "author": {
+        "name": "SnagRelay",
+        "email": "hello@snagrelay.com",
+        "url": "https://snagrelay.com"
+    },
+    "homepage": "https://snagrelay.com/?ref=codex",
+    "repository": "https://github.com/snagrelay/agent-plugin",
+    "license": "MIT",
+    "keywords": [
+        "bug",
+        "issues",
+        "mcp",
+        "debugging",
+        "bug-reporting",
+        "qa"
+    ],
+    "skills": "./skills/",
+    "mcpServers": "./.mcp.json",
+    "interface": {
+        "displayName": "SnagRelay",
+        "shortDescription": "Bugs your agent can fix",
+        "longDescription": "Give your agent a ticket key and it reads the broken element, console errors with file and line, failing requests with their bodies and the repro steps. It checks earlier similar bugs and the PR that fixed them, proposes a fix, and marks the issue resolved when you approve.",
+        "developerName": "SnagRelay",
+        "category": "Developer Tools",
+        "capabilities": [
+            "Read",
+            "Write"
+        ],
+        "websiteURL": "https://snagrelay.com/?ref=codex",
+        "supportURL": "https://snagrelay.com/contact/",
+        "privacyPolicyURL": "https://snagrelay.com/privacy",
+        "termsOfServiceURL": "https://snagrelay.com/terms",
+        "defaultPrompt": [
+            "Fix DEMO-2 using the SnagRelay report.",
+            "List my open SnagRelay issues.",
+            "Has the bug in DEMO-2 happened before?"
+        ],
+        "brandColor": "#d6ff3f",
+        "composerIcon": "./assets/logo.svg",
+        "logo": "./assets/logo.svg"
+    },
+    "extensions": {
+        "com.openai": {
+            "review": {
+                "test_cases": {
+                    "positive": [
+                        {
+                            "description": "Load a report and find the cause",
+                            "prompt": "Fix DEMO-2 using the SnagRelay report.",
+                            "tools_triggered": "get_issue_context",
+                            "expected_behavior": "Loads the report first, then names the cause from the evidence: the TypeError in applyDiscount, and the failed POST /api/promo/apply that returned 404. Does not propose a fix before reading the report."
+                        },
+                        {
+                            "description": "Read a full request and response body",
+                            "prompt": "Show me the full request and response of the failing request in DEMO-2.",
+                            "tools_triggered": "get_issue_context, get_issue_payload",
+                            "expected_behavior": "Returns the POST /api/promo/apply request body {\"code\":\"BUGDEMO\"} and its 404 response body, with secrets redacted."
+                        },
+                        {
+                            "description": "Look up earlier similar bugs",
+                            "prompt": "Has the bug in DEMO-2 happened before, and what fixed it?",
+                            "tools_triggered": "get_issue_context, get_related_history",
+                            "expected_behavior": "Returns the earlier resolved report DEMO-1 on the same endpoint, with the pull request that fixed it."
+                        },
+                        {
+                            "description": "List open issues without a key",
+                            "prompt": "List my open SnagRelay issues.",
+                            "tools_triggered": "find_issues",
+                            "expected_behavior": "Lists open issues in the demo project with key, title and status. Does not load full context for each."
+                        },
+                        {
+                            "description": "Check the connected account",
+                            "prompt": "Which SnagRelay account and projects am I connected to?",
+                            "tools_triggered": "whoami",
+                            "expected_behavior": "Returns the signed-in reviewer account, its plan and the demo project."
+                        }
+                    ],
+                    "negative": [
+                        {
+                            "description": "A bug described in chat without a SnagRelay key",
+                            "prompt": "The total on my checkout page shows NaN. Fix it."
+                        },
+                        {
+                            "description": "Unsupported deletion",
+                            "prompt": "Delete every issue in my SnagRelay project."
+                        },
+                        {
+                            "description": "Access outside the connected account",
+                            "prompt": "Show me the issues from another company's SnagRelay project."
+                        }
+                    ]
+                },
+                "commerce": false,
+                "commerce_description": "This plugin does not sell products or process payments."
+            },
+            "publication": {
+                "release_notes": "Initial release: read a captured bug with its element, console errors, failing requests with bodies and repro steps, check earlier similar bugs, and mark an issue resolved after review."
+            }
+        }
+    }
+}

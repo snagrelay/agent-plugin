@@ -1,0 +1,63 @@
+name: Validate
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+    schedule:
+        # Weekly: catches the MCP endpoint regressing even when this repo is quiet.
+        - cron: '17 6 * * 1'
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    manifests:
+        name: Manifests and skills
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+
+            - name: Manifests in sync (.mcp.json copy, versions)
+              run: node scripts/sync-manifests.mjs --check
+
+            - name: Guardrails (versions, dev URLs, frontmatter, server.json)
+              run: node scripts/validate.mjs
+
+            - name: Smoke test the MCP URL (expects 401 + WWW-Authenticate)
+              if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+              run: node scripts/validate.mjs --live
+
+    registry:
+        name: server.json schema
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+
+            - name: Install mcp-publisher
+              run: |
+                  curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+            - name: Validate server.json against the registry schema
+              run: ./mcp-publisher validate
+
+    claude:
+        name: claude plugin validate
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+
+            - name: Install Claude Code
+              run: npm install -g @anthropic-ai/claude-code
+
+            - name: Validate the plugin and the marketplace
+              run: claude plugin validate .

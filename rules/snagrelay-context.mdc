@@ -1,0 +1,16 @@
+---
+name: snagrelay-context
+description: When working on a SnagRelay issue, always fetch full context before proposing a fix.
+alwaysApply: false
+---
+
+# SnagRelay issue context
+
+When the user mentions a SnagRelay issue key (format: `PROJ-123` or any `[A-Z]+-\d+`) or asks you to fix a bug from SnagRelay:
+
+1. **Always** call `get_issue_context("PROJ-123")` first.
+2. Read the console errors, the failing requests and their response bodies, and the repro steps. Open the `screenshot` resource_link (`resources/read`) only when the visual state matters. Do not fetch tracker attachment URLs (Jira/Trello/Azure): they will 403.
+3. Do not guess the root cause from the title alone — the console and network data often reveal the real cause.
+4. When the developer has reviewed the fix and asks to resolve it, use the `resolve-issue` skill (it commits, opens the PR and calls `mark_issue_resolved`). Do not resolve before that.
+
+Do not skip step 1. The issue title is a summary written by a non-technical user. The real error is in the console or HTTP response body.

@@ -1,0 +1,18 @@
+{
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "com.snagrelay/snagrelay",
+    "title": "SnagRelay",
+    "description": "Bug reports your coding agent can fix: real element, console errors, failing requests with bodies.",
+    "repository": {
+        "url": "https://github.com/snagrelay/agent-plugin",
+        "source": "github"
+    },
+    "version": "1.0.0",
+    "websiteUrl": "https://snagrelay.com/?ref=mcp-registry",
+    "remotes": [
+        {
+            "type": "streamable-http",
+            "url": "https://mcp.snagrelay.com/v1"
+        }
+    ]
+}

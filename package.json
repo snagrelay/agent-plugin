@@ -1,0 +1,16 @@
+{
+    "name": "snagrelay-agent-plugin",
+    "private": true,
+    "description": "Listing and distribution repo for the SnagRelay MCP server. Not published to npm.",
+    "license": "MIT",
+    "type": "module",
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "validate": "node scripts/validate.mjs",
+        "validate:live": "node scripts/validate.mjs --live",
+        "sync": "node scripts/sync-manifests.mjs",
+        "sync:check": "node scripts/sync-manifests.mjs --check"
+    }
+}

@@ -1,0 +1,128 @@
+name: Release
+
+on:
+    push:
+        tags: ['v*']
+
+permissions:
+    contents: read
+
+jobs:
+    verify:
+        name: Verify tag matches manifests
+        runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.version.outputs.version }}
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+
+            - id: version
+              run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+            - name: Manifests carry the tagged version
+              run: |
+                  node scripts/sync-manifests.mjs --check "${{ steps.version.outputs.version }}"
+                  node scripts/validate.mjs
+
+    github-release:
+        name: GitHub Release
+        needs: verify
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v5
+
+            - name: Release notes from CHANGELOG.md
+              run: |
+                  v="${{ needs.verify.outputs.version }}"
+                  awk -v v="$v" '
+                      $0 ~ "^## v?"v"([[:space:]]|$)" { on=1; next }
+                      /^## / && on { exit }
+                      on { print }
+                  ' CHANGELOG.md > notes.md
+                  test -s notes.md || { echo "No changelog entry for $v"; exit 1; }
+
+            - name: Create the release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: gh release create "$GITHUB_REF_NAME" --title "SnagRelay $GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+
+    registry:
+        name: Publish to the MCP Registry
+        needs: verify
+        runs-on: ubuntu-latest
+        # Holds MCP_PRIVATE_KEY. Restrict this environment to v* tags and add a required reviewer.
+        environment: mcp-registry-publish
+        steps:
+            - uses: actions/checkout@v5
+
+            # A published version cannot be overwritten. Skip when this version is already listed
+            # (for example when it was published by hand first).
+            - name: Already in the registry?
+              id: listed
+              run: |
+                  version="${{ needs.verify.outputs.version }}"
+                  found=$(curl -fsS "https://registry.modelcontextprotocol.io/v0.1/servers?search=com.snagrelay/snagrelay" \
+                      | jq --arg v "$version" '[.servers[].server | select(.name == "com.snagrelay/snagrelay" and .version == $v)] | length')
+                  echo "found=$found" >> "$GITHUB_OUTPUT"
+                  echo "Registry entries for $version: $found"
+
+            - name: Install mcp-publisher
+              if: steps.listed.outputs.found == '0'
+              run: |
+                  curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+            - name: Authenticate (DNS, com.snagrelay)
+              if: steps.listed.outputs.found == '0'
+              run: ./mcp-publisher login dns --domain snagrelay.com --private-key "${{ secrets.MCP_PRIVATE_KEY }}"
+
+            - name: Publish
+              if: steps.listed.outputs.found == '0'
+              run: ./mcp-publisher publish
+
+    sync-cursor-plugin:
+        name: PR skills and rules to snagrelay/cursor-plugin
+        needs: verify
+        # Off until both Cursor listings are approved. Set the repo variable SYNC_CURSOR_PLUGIN=true.
+        if: vars.SYNC_CURSOR_PLUGIN == 'true'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+              with:
+                  path: agent-plugin
+
+            - uses: actions/checkout@v5
+              with:
+                  repository: snagrelay/cursor-plugin
+                  token: ${{ secrets.CURSOR_PLUGIN_PR_TOKEN }}
+                  path: cursor-plugin
+
+            - name: Copy skills and rules
+              run: |
+                  rsync -a --delete agent-plugin/skills/ cursor-plugin/skills/
+                  rsync -a --delete agent-plugin/rules/ cursor-plugin/rules/
+
+            - name: Open a PR
+              working-directory: cursor-plugin
+              env:
+                  GH_TOKEN: ${{ secrets.CURSOR_PLUGIN_PR_TOKEN }}
+              run: |
+                  if git diff --quiet && [ -z "$(git status --porcelain)" ]; then
+                      echo "cursor-plugin already up to date"
+                      exit 0
+                  fi
+                  branch="sync/agent-plugin-${{ needs.verify.outputs.version }}"
+                  git config user.name "snagrelay-bot"
+                  git config user.email "hello@snagrelay.com"
+                  git checkout -b "$branch"
+                  git add -A
+                  git commit -m "Sync skills and rules from agent-plugin ${{ needs.verify.outputs.version }}"
+                  git push -u origin "$branch"
+                  gh pr create --title "Sync skills and rules from agent-plugin ${{ needs.verify.outputs.version }}" \
+                      --body "Automated copy of \`skills/\` and \`rules/\` from snagrelay/agent-plugin at ${{ github.ref_name }}. Review, then merge." \
+                      --base main

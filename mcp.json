@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+        "snagrelay": {
+            "url": "https://mcp.snagrelay.com/v1",
+            "type": "http"
+        }
+    }
+}

@@ -1,0 +1,10 @@
+name: Skill or listing request
+description: Suggest a change to a skill, the rule or a directory listing
+labels: [enhancement]
+body:
+    - type: textarea
+      id: idea
+      attributes:
+          label: What should change and why
+      validations:
+          required: true

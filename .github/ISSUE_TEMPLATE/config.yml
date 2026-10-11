@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+    - name: Product support and billing
+      url: https://snagrelay.com
+      about: Account, billing and widget questions go to SnagRelay support, not this repo.
+    - name: Security vulnerability
+      url: https://github.com/snagrelay/agent-plugin/blob/main/SECURITY.md
+      about: Do not open a public issue. Follow SECURITY.md.
